@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>😏</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: linear-gradient(135deg, #ff4b8b, #6a00ff);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* CARD */
+#card {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    width: 90%;
+    max-width: 350px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+h1 {
+    font-size: 24px;
+}
+
+/* BUTTONS */
+button {
+    padding: 15px 20px;
+    font-size: 18px;
+    border: none;
+    border-radius: 12px;
+    margin: 10px;
+}
+
+#yesBtn {
+    background: #ff4b8b;
+    color: white;
+    transition: 0.2s;
+}
+
+#yesBtn:hover {
+    transform: scale(1.1);
+}
+
+#noBtn {
+    position: absolute;
+    background: #bbb;
+}
+
+/* HEARTS */
+.heart {
+    position: absolute;
+    font-size: 20px;
+    animation: float 1s forwards;
+}
+
+@keyframes float {
+    to {
+        transform: translateY(-150px);
+        opacity: 0;
+    }
+}
+
+/* SHAKE */
+.shake {
+    animation: shake 0.2s;
+}
+
+@keyframes shake {
+    0% { transform: translate(5px, 5px); }
+    25% { transform: translate(-5px, 5px); }
+    50% { transform: translate(5px, -5px); }
+    75% { transform: translate(-5px, -5px); }
+    100% { transform: translate(0px, 0px); }
+}
+</style>
+</head>
+
+<body>
+
+<div id="card">
+    <h1 id="question">Viltu fara á date með Gunna? 😏</h1>
+
+    <button onclick="yesClicked()" id="yesBtn">Já ❤️</button>
+    <button id="noBtn">Nei ❌👟</button>
+</div>
+
+<audio id="sound">
+<source src="https://www.soundjay.com/buttons/sounds/button-3.mp3">
+</audio>
+
+<script>
+const noBtn = document.getElementById("noBtn");
+const yesBtn = document.getElementById("yesBtn");
+const question = document.getElementById("question");
+const sound = document.getElementById("sound");
+const body = document.body;
+
+let step = 0;
+let speed = 1;
+
+/* EVIL NO BUTTON */
+function moveNo(e) {
+    const x = Math.random() * (window.innerWidth - 100);
+    const y = Math.random() * (window.innerHeight - 50);
+
+    noBtn.style.left = x + "px";
+    noBtn.style.top = y + "px";
+
+    speed += 0.3;
+
+    body.classList.add("shake");
+    setTimeout(() => body.classList.remove("shake"), 200);
+
+    const messages = [
+        "Nice try 😏",
+        "Nope that is not what is going to happen 😂",
+        "you trying to say no 😎",
+        "You can't catch me 👟",
+        "HAHA 😈"
+    ];
+
+    noBtn.innerText = messages[Math.floor(Math.random() * messages.length)];
+
+    /* TELEPORT if cursor close */
+    if (e) {
+        const rect = noBtn.getBoundingClientRect();
+        const dx = e.clientX - rect.left;
+        const dy = e.clientY - rect.top;
+
+        if (Math.abs(dx) < 80 && Math.abs(dy) < 40) {
+            noBtn.style.left = Math.random() * window.innerWidth + "px";
+            noBtn.style.top = Math.random() * window.innerHeight + "px";
+        }
+    }
+}
+
+noBtn.addEventListener("mouseover", moveNo);
+noBtn.addEventListener("touchstart", moveNo);
+
+/* HEART EXPLOSION */
+function hearts() {
+    for (let i = 0; i < 20; i++) {
+        const h = document.createElement("div");
+        h.innerText = "💘";
+        h.classList.add("heart");
+
+        h.style.left = Math.random() * window.innerWidth + "px";
+        h.style.top = Math.random() * window.innerHeight + "px";
+
+        document.body.appendChild(h);
+
+        setTimeout(() => h.remove(), 1000);
+    }
+}
+
+function yesClicked() {
+    sound.play();
+    hearts();
+
+    step++;
+
+    if (step === 1) {
+        question.innerText = "Ertu að segja mér að þetta sé netflix og chill date? 😏";
+    }
+    else if (step === 2) {
+        question.innerText = "Á ég að koma með eitthvað annað en tannbursta?";
+        yesBtn.innerText = "Eina bláa pilluna og 🍷";
+    }
+    else {
+        document.getElementById("card").innerHTML =
+        "<h1>💘 Bláa pillu... ok þú ert djörf 😎 Til hamingju þú ert komin á date með Gunna!</h1>";
+    }
+}
+</script>
+
+</body>
+</html>
