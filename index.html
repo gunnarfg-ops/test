@@ -83,6 +83,46 @@ button {
     75% { transform: translate(-5px, -5px); }
     100% { transform: translate(0px, 0px); }
 }
+
+/* COUNTER */
+#counter {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.9);
+    color: #333;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* FINAL FORM */
+#finalForm input[type="tel"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    font-size: 16px;
+    border: 2px solid #ff4b8b;
+    border-radius: 10px;
+    margin-top: 12px;
+    text-align: center;
+}
+
+#finalForm .hint {
+    font-size: 13px;
+    color: #777;
+    margin-top: 8px;
+}
+
+#finalForm #sendBtn {
+    background: #ff4b8b;
+    color: white;
+    width: 100%;
+    margin-top: 14px;
+    margin-left: 0;
+}
 </style>
 </head>
 
@@ -94,6 +134,8 @@ button {
     <button onclick="yesClicked()" id="yesBtn">Já ❤️</button>
     <button id="noBtn">Nei ❌👟</button>
 </div>
+
+<div id="counter">👀 Þú ert gestur nr. <span id="visitCount">...</span></div>
 
 <audio id="sound">
 <source src="https://www.soundjay.com/buttons/sounds/button-3.mp3">
@@ -108,12 +150,17 @@ const body = document.body;
 
 let step = 0;
 let speed = 1;
+let dodgeCount = 0;
+const YES_JOIN_AFTER = 6; // after this many No-dodges, Yes starts moving too
 
 /* EVIL NO BUTTON */
 function moveNo(e) {
+    dodgeCount++;
+
     const x = Math.random() * (window.innerWidth - 100);
     const y = Math.random() * (window.innerHeight - 50);
 
+    noBtn.style.position = "absolute";
     noBtn.style.left = x + "px";
     noBtn.style.top = y + "px";
 
@@ -143,10 +190,70 @@ function moveNo(e) {
             noBtn.style.top = Math.random() * window.innerHeight + "px";
         }
     }
+
+    /* AFTER 6 ATTEMPTS, YES BUTTON ALSO JUMPS TO A NEW SPOT */
+    if (dodgeCount >= YES_JOIN_AFTER) {
+        moveYes();
+        if (dodgeCount === YES_JOIN_AFTER) {
+            question.innerText = "Núna verður þú að ná Já takkanum líka 😈";
+        }
+    }
+}
+
+function moveYes() {
+    yesBtn.style.position = "absolute";
+
+    const btnWidth = 140;
+    const btnHeight = 60;
+    const margin = 20;
+
+    const x = margin + Math.random() * (window.innerWidth - btnWidth - margin * 2);
+    const y = margin + Math.random() * (window.innerHeight - btnHeight - margin * 2);
+
+    yesBtn.style.left = x + "px";
+    yesBtn.style.top = y + "px";
 }
 
 noBtn.addEventListener("mouseover", moveNo);
 noBtn.addEventListener("touchstart", moveNo);
+
+/* VISITOR COUNTER */
+async function updateVisitorCount() {
+    const countEl = document.getElementById("visitCount");
+    const key = "gunni_date_visits";
+
+    try {
+        // Try Claude artifact shared storage first (counts real cross-visitor views)
+        if (window.storage) {
+            let current = 0;
+            try {
+                const existing = await window.storage.get(key, true);
+                current = existing ? parseInt(existing.value, 10) : 0;
+            } catch (err) {
+                current = 0;
+            }
+            const next = current + 1;
+            await window.storage.set(key, String(next), true);
+            countEl.innerText = next;
+            return;
+        }
+    } catch (err) {
+        // fall through to localStorage
+    }
+
+    // Fallback for when opened outside Claude (e.g. plain HTML file, no shared storage available).
+    // This only counts visits on THIS device/browser, not truly global.
+    try {
+        const current = parseInt(localStorage.getItem(key) || "0", 10);
+        const next = current + 1;
+        localStorage.setItem(key, String(next));
+        countEl.innerText = next;
+    } catch (err) {
+        countEl.innerText = "?";
+    }
+}
+
+updateVisitorCount();
 
 /* HEART EXPLOSION */
 function hearts() {
@@ -178,11 +285,117 @@ function yesClicked() {
         yesBtn.innerText = "Eina bláa pilluna og 🍷";
     }
     else {
-        document.getElementById("card").innerHTML =
-        "<h1>💘 Bláa pillu... ok þú ert djörf 😎 Til hamingju þú ert komin á date með Gunna!</h1>";
+        document.getElementById("card").innerHTML = `
+            <h1>💘 Bláa pillu... ok þú ert djörf 😎 Til hamingju þú ert komin á date með Gunna!</h1>
+            <div id="finalForm">
+                <input type="tel" id="phoneInput" placeholder="Símanúmerið þitt">
+                <p class="hint">Skráðu nr þitt og ýttu á Senda... eða ef þú ert djörf má senda selfie 😏</p>
+                <button id="sendBtn">Senda 💌</button>
+            </div>
+        `;
+
+        const phoneInput = document.getElementById("phoneInput");
+        const sendBtn = document.getElementById("sendBtn");
+
+        sendBtn.addEventListener("click", sendToGunni);
+        phoneInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                sendToGunni();
+            }
+        });
     }
 }
+
+const GUNNI_SNAPCHAT = "gunnarfg77";
+
+async function sendToGunni() {
+    const phoneInput = document.getElementById("phoneInput");
+    const phone = phoneInput ? phoneInput.value.trim() : "";
+
+    // Save the submitted phone number so it can be viewed later (see admin view below).
+    if (phone && window.storage) {
+        try {
+            const key = `submission:${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+            await window.storage.set(key, JSON.stringify({
+                phone: phone,
+                time: new Date().toISOString()
+            }), true);
+        } catch (err) {
+            console.error("Could not save submission:", err);
+        }
+    }
+
+    // Show the "are you brave?" choice screen
+    document.getElementById("card").innerHTML = `
+        <h1>Ert þú djörf? 😏</h1>
+        <button id="selfieBtn">Senda selfie 📸</button>
+        <button id="chickenBtn">Nei ég þori ekki 🙈</button>
+    `;
+
+    document.getElementById("selfieBtn").addEventListener("click", () => {
+        // Opens immediately, tied directly to this click, so pop-up blockers allow it.
+        window.open(`https://www.snapchat.com/add/${GUNNI_SNAPCHAT}`, "_blank");
+        document.getElementById("card").innerHTML = `
+            <h1>😏 Flott hjá þér!</h1>
+            <p style="font-size:15px; color:#555;">Snapchat opnaðist í nýjum flipa</p>
+        `;
+    });
+
+    document.getElementById("chickenBtn").addEventListener("click", () => {
+        document.getElementById("card").innerHTML = `
+            <h1>Sjáumst! 😏</h1>
+            <p style="font-size:15px; color:#555;">Kannski næst 🙈💌</p>
+        `;
+    });
+}
+
+/* ADMIN VIEW: open this page with ?admin=1 in the URL to see all submitted numbers */
+async function showAdminView() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("admin") !== "1") return;
+
+    document.getElementById("card").innerHTML = "<h1>Hleð inn skráningum...</h1>";
+
+    try {
+        const list = await window.storage.list("submission:", true);
+        const keys = (list && list.keys) ? list.keys : [];
+
+        if (keys.length === 0) {
+            document.getElementById("card").innerHTML = "<h1>Engin númer skráð ennþá 📭</h1>";
+            return;
+        }
+
+        const entries = [];
+        for (const key of keys) {
+            try {
+                const result = await window.storage.get(key, true);
+                if (result && result.value) {
+                    entries.push(JSON.parse(result.value));
+                }
+            } catch (err) {
+                // skip broken entries
+            }
+        }
+
+        entries.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+        const rows = entries.map(e =>
+            `<li style="text-align:left; margin-bottom:8px;">📱 <b>${e.phone}</b><br><span style="font-size:12px;color:#888;">${new Date(e.time).toLocaleString('is-IS')}</span></li>`
+        ).join("");
+
+        document.getElementById("card").innerHTML = `
+            <h1>Skráð númer (${entries.length})</h1>
+            <ul style="list-style:none; padding:0;">${rows}</ul>
+        `;
+    } catch (err) {
+        document.getElementById("card").innerHTML = "<h1>Villa við að sækja skráningar</h1>";
+    }
+}
+
+showAdminView();
 </script>
 
 </body>
 </html>
+
