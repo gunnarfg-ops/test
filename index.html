@@ -154,17 +154,15 @@ let dodgeCount = 0;
 const YES_JOIN_AFTER = 6; // after this many No-dodges, Yes starts moving too
 
 /* EVIL NO BUTTON */
-function moveNo(e) {
-    dodgeCount++;
+function dodgeButton(e) {
+    const btn = e.currentTarget;
 
     const x = Math.random() * (window.innerWidth - 100);
     const y = Math.random() * (window.innerHeight - 50);
 
-    noBtn.style.position = "absolute";
-    noBtn.style.left = x + "px";
-    noBtn.style.top = y + "px";
-
-    speed += 0.3;
+    btn.style.position = "absolute";
+    btn.style.left = x + "px";
+    btn.style.top = y + "px";
 
     body.classList.add("shake");
     setTimeout(() => body.classList.remove("shake"), 200);
@@ -177,19 +175,27 @@ function moveNo(e) {
         "HAHA 😈"
     ];
 
-    noBtn.innerText = messages[Math.floor(Math.random() * messages.length)];
+    btn.innerText = messages[Math.floor(Math.random() * messages.length)];
 
     /* TELEPORT if cursor close */
-    if (e) {
-        const rect = noBtn.getBoundingClientRect();
-        const dx = e.clientX - rect.left;
-        const dy = e.clientY - rect.top;
+    const rect = btn.getBoundingClientRect();
+    const dx = e.clientX - rect.left;
+    const dy = e.clientY - rect.top;
 
-        if (Math.abs(dx) < 80 && Math.abs(dy) < 40) {
-            noBtn.style.left = Math.random() * window.innerWidth + "px";
-            noBtn.style.top = Math.random() * window.innerHeight + "px";
-        }
+    if (Math.abs(dx) < 80 && Math.abs(dy) < 40) {
+        btn.style.left = Math.random() * window.innerWidth + "px";
+        btn.style.top = Math.random() * window.innerHeight + "px";
     }
+}
+
+function attachDodge(btn) {
+    btn.addEventListener("mouseover", dodgeButton);
+    btn.addEventListener("touchstart", dodgeButton);
+}
+
+function moveNo(e) {
+    dodgeCount++;
+    dodgeButton(e);
 
     /* AFTER 6 ATTEMPTS, YES BUTTON ALSO JUMPS TO A NEW SPOT */
     if (dodgeCount >= YES_JOIN_AFTER) {
@@ -290,13 +296,27 @@ function yesClicked() {
     step++;
 
     if (step === 1) {
-        question.innerText = "Ertu að segja mér að þetta sé netflix og chill date? 😏";
+        document.getElementById("card").innerHTML = `
+            <h1>Ertu að segja mér að þetta sé netflix og chill date? 😏</h1>
+            <button id="netflixBtn">Netflix og chill 😏</button>
+            <button id="coffeeBtn">Kaffihús frekar ☕</button>
+        `;
+
+        document.getElementById("netflixBtn").addEventListener("click", netflixPath);
+        document.getElementById("coffeeBtn").addEventListener("click", coffeePath);
     }
-    else if (step === 2) {
-        question.innerText = "Á ég að koma með eitthvað annað en tannbursta?";
-        yesBtn.innerText = "Eina bláa pilluna og 🍷";
-    }
-    else {
+}
+
+function netflixPath() {
+    document.getElementById("card").innerHTML = `
+        <h1>Á ég að koma með eitthvað annað en tannbursta? 😏</h1>
+        <button id="pillBtn">Eina bláa pilluna og 🍷</button>
+        <button id="noBtn2">Nei ❌👟</button>
+    `;
+
+    attachDodge(document.getElementById("noBtn2"));
+
+    document.getElementById("pillBtn").addEventListener("click", () => {
         document.getElementById("card").innerHTML = `
             <h1>💘 Bláa pillu... ok þú ert djörf 😎 Þú ert að nálgast endamarkið, næstum komin á date með Gunna!</h1>
             <div id="finalForm">
@@ -304,9 +324,19 @@ function yesClicked() {
                 <button id="sendBtn">Senda 💌</button>
             </div>
         `;
-
         document.getElementById("sendBtn").addEventListener("click", sendToGunni);
-    }
+    });
+}
+
+function coffeePath() {
+    document.getElementById("card").innerHTML = `
+        <h1>Kaffihús það er þá ☕ Ekkert mál, ennþá jafn spennandi 😊</h1>
+        <div id="finalForm">
+            <p class="hint">Ýttu hér til að senda skilaboð 💌</p>
+            <button id="sendBtn">Senda 💌</button>
+        </div>
+    `;
+    document.getElementById("sendBtn").addEventListener("click", sendToGunni);
 }
 
 const GUNNI_MESSENGER_ID = "1510598343";
