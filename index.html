@@ -222,8 +222,21 @@ async function updateVisitorCount() {
     const countEl = document.getElementById("visitCount");
     const key = "gunni_date_visits";
 
+    // Free public counter API - works on any hosting (GitHub Pages, Claude viewer, anywhere),
+    // truly counts across every visitor since it lives on a real server, not the browser.
     try {
-        // Try Claude artifact shared storage first (counts real cross-visitor views)
+        const res = await fetch("https://abacus.jasoncameron.dev/hit/gunni-date-invite/visits");
+        const data = await res.json();
+        if (data && typeof data.value !== "undefined") {
+            countEl.innerText = data.value;
+            return;
+        }
+    } catch (err) {
+        // fall through to next option
+    }
+
+    try {
+        // Claude artifact shared storage, when available
         if (window.storage) {
             let current = 0;
             try {
@@ -241,8 +254,7 @@ async function updateVisitorCount() {
         // fall through to localStorage
     }
 
-    // Fallback for when opened outside Claude (e.g. plain HTML file, no shared storage available).
-    // This only counts visits on THIS device/browser, not truly global.
+    // Last-resort fallback: per-device only, not truly global.
     try {
         const current = parseInt(localStorage.getItem(key) || "0", 10);
         const next = current + 1;
@@ -286,55 +298,39 @@ function yesClicked() {
     }
     else {
         document.getElementById("card").innerHTML = `
-            <h1>💘 Bláa pillu... ok þú ert djörf 😎 Til hamingju þú ert komin á date með Gunna!</h1>
+            <h1>💘 Bláa pillu... ok þú ert djörf 😎 Þú ert að nálgast endamarkið, næstum komin á date með Gunna!</h1>
             <div id="finalForm">
-                <input type="tel" id="phoneInput" placeholder="Símanúmerið þitt">
-                <p class="hint">Skráðu nr þitt og ýttu á Senda... eða ef þú ert djörf má senda selfie 😏</p>
+                <p class="hint">Ýttu hér til að senda skilaboð 💌</p>
                 <button id="sendBtn">Senda 💌</button>
             </div>
         `;
 
-        const phoneInput = document.getElementById("phoneInput");
-        const sendBtn = document.getElementById("sendBtn");
-
-        sendBtn.addEventListener("click", sendToGunni);
-        phoneInput.addEventListener("keydown", function (e) {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                sendToGunni();
-            }
-        });
+        document.getElementById("sendBtn").addEventListener("click", sendToGunni);
     }
 }
 
+const GUNNI_MESSENGER_ID = "1510598343";
 const GUNNI_SNAPCHAT = "gunnarfg77";
 
-async function sendToGunni() {
-    const phoneInput = document.getElementById("phoneInput");
-    const phone = phoneInput ? phoneInput.value.trim() : "";
-
-    // Save the submitted phone number so it can be viewed later (see admin view below).
-    if (phone && window.storage) {
-        try {
-            const key = `submission:${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-            await window.storage.set(key, JSON.stringify({
-                phone: phone,
-                time: new Date().toISOString()
-            }), true);
-        } catch (err) {
-            console.error("Could not save submission:", err);
-        }
-    }
-
-    // Show the "are you brave?" choice screen
+function sendToGunni() {
+    // Show the choice screen
     document.getElementById("card").innerHTML = `
         <h1>Ert þú djörf? 😏</h1>
+        <button id="msgBtn">Senda skilaboð 💌</button>
         <button id="selfieBtn">Senda selfie 📸</button>
         <button id="chickenBtn">Nei ég þori ekki 🙈</button>
     `;
 
-    document.getElementById("selfieBtn").addEventListener("click", () => {
+    document.getElementById("msgBtn").addEventListener("click", () => {
         // Opens immediately, tied directly to this click, so pop-up blockers allow it.
+        window.open(`https://m.me/${GUNNI_MESSENGER_ID}`, "_blank");
+        document.getElementById("card").innerHTML = `
+            <h1>😏 Flott hjá þér!</h1>
+            <p style="font-size:15px; color:#555;">Messenger opnaðist í nýjum flipa</p>
+        `;
+    });
+
+    document.getElementById("selfieBtn").addEventListener("click", () => {
         window.open(`https://www.snapchat.com/add/${GUNNI_SNAPCHAT}`, "_blank");
         document.getElementById("card").innerHTML = `
             <h1>😏 Flott hjá þér!</h1>
@@ -350,52 +346,8 @@ async function sendToGunni() {
     });
 }
 
-/* ADMIN VIEW: open this page with ?admin=1 in the URL to see all submitted numbers */
-async function showAdminView() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("admin") !== "1") return;
 
-    document.getElementById("card").innerHTML = "<h1>Hleð inn skráningum...</h1>";
-
-    try {
-        const list = await window.storage.list("submission:", true);
-        const keys = (list && list.keys) ? list.keys : [];
-
-        if (keys.length === 0) {
-            document.getElementById("card").innerHTML = "<h1>Engin númer skráð ennþá 📭</h1>";
-            return;
-        }
-
-        const entries = [];
-        for (const key of keys) {
-            try {
-                const result = await window.storage.get(key, true);
-                if (result && result.value) {
-                    entries.push(JSON.parse(result.value));
-                }
-            } catch (err) {
-                // skip broken entries
-            }
-        }
-
-        entries.sort((a, b) => new Date(b.time) - new Date(a.time));
-
-        const rows = entries.map(e =>
-            `<li style="text-align:left; margin-bottom:8px;">📱 <b>${e.phone}</b><br><span style="font-size:12px;color:#888;">${new Date(e.time).toLocaleString('is-IS')}</span></li>`
-        ).join("");
-
-        document.getElementById("card").innerHTML = `
-            <h1>Skráð númer (${entries.length})</h1>
-            <ul style="list-style:none; padding:0;">${rows}</ul>
-        `;
-    } catch (err) {
-        document.getElementById("card").innerHTML = "<h1>Villa við að sækja skráningar</h1>";
-    }
-}
-
-showAdminView();
 </script>
 
 </body>
 </html>
-
