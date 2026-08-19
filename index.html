@@ -10,7 +10,7 @@
 body {
     margin: 0;
     font-family: Arial;
-    background: linear-gradient(135deg, #ff4b8b, #6a00ff);
+    background: linear-gradient(135deg, #ff6b9d, #a855f7);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -129,7 +129,7 @@ button {
 <body>
 
 <div id="card">
-    <h1 id="question">Viltu fara á date með Gunna? 😏</h1>
+    <h1 id="question">Þú sást Gunna á Menningarnótt 2026 og langar að fara á date með honum? 😏</h1>
 
     <button onclick="yesClicked()" id="yesBtn">Já ❤️</button>
     <button id="noBtn">Nei ❌👟</button>
@@ -228,8 +228,6 @@ async function updateVisitorCount() {
     const countEl = document.getElementById("visitCount");
     const key = "gunni_date_visits";
 
-    // Free public counter API - works on any hosting (GitHub Pages, Claude viewer, anywhere),
-    // truly counts across every visitor since it lives on a real server, not the browser.
     try {
         const res = await fetch("https://abacus.jasoncameron.dev/hit/gunni-date-invite/visits");
         const data = await res.json();
@@ -242,7 +240,6 @@ async function updateVisitorCount() {
     }
 
     try {
-        // Claude artifact shared storage, when available
         if (window.storage) {
             let current = 0;
             try {
@@ -260,7 +257,6 @@ async function updateVisitorCount() {
         // fall through to localStorage
     }
 
-    // Last-resort fallback: per-device only, not truly global.
     try {
         const current = parseInt(localStorage.getItem(key) || "0", 10);
         const next = current + 1;
@@ -343,7 +339,6 @@ const GUNNI_MESSENGER_ID = "1510598343";
 const GUNNI_SNAPCHAT = "gunnarfg77";
 
 function sendToGunni() {
-    // Show the choice screen
     document.getElementById("card").innerHTML = `
         <h1>Ert þú djörf? 😏</h1>
         <button id="msgBtn">Senda skilaboð 💌</button>
@@ -352,7 +347,6 @@ function sendToGunni() {
     `;
 
     document.getElementById("msgBtn").addEventListener("click", () => {
-        // Opens immediately, tied directly to this click, so pop-up blockers allow it.
         window.open(`https://m.me/${GUNNI_MESSENGER_ID}`, "_blank");
         document.getElementById("card").innerHTML = `
             <h1>😏 Flott hjá þér!</h1>
@@ -375,8 +369,6 @@ function sendToGunni() {
         `;
     });
 }
-
-
 </script>
 
 </body>
