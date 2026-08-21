@@ -346,13 +346,16 @@ function sendToGunni() {
         <button id="chickenBtn">Nei ég þori ekki 🙈</button>
     `;
 
-    document.getElementById("msgBtn").addEventListener("click", () => {
-        window.open(`https://m.me/${GUNNI_MESSENGER_ID}`, "_blank");
-        document.getElementById("card").innerHTML = `
-            <h1>😏 Flott hjá þér!</h1>
-            <p style="font-size:15px; color:#555;">Messenger opnaðist í nýjum flipa</p>
-        `;
-    });
+document.getElementById("msgBtn").addEventListener("click", () => {
+document.getElementById("card").innerHTML = `
+<h1>😏 Flott hjá þér!</h1>
+<p style="font-size:15px; color:#555;">Opna Messenger...</p>
+`;
+ 
+setTimeout(() => {
+window.location.href = "https://m.me/gunnarfg";
+}, 500);
+});
 
     document.getElementById("selfieBtn").addEventListener("click", () => {
         window.open(`https://www.snapchat.com/add/${GUNNI_SNAPCHAT}`, "_blank");
