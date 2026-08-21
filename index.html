@@ -339,12 +339,19 @@ const GUNNI_MESSENGER_ID = "1510598343";
 const GUNNI_SNAPCHAT = "gunnarfg77";
 
 function sendToGunni() {
+document.getElementById("card").innerHTML = `
+    <h1>Ert þú djörf? 😏</h1>
+    <a id="msgBtn" href="https://m.me/${GUNNI_MESSENGER_ID}" target="_blank" rel="noopener">Senda skilaboð 💌</a>
+    <button id="selfieBtn">Senda selfie 📸</button>
+    <button id="chickenBtn">Nei ég þori ekki 🙈</button>
+`;
+
+document.getElementById("msgBtn").addEventListener("click", () => {
     document.getElementById("card").innerHTML = `
-        <h1>Ert þú djörf? 😏</h1>
-        <button id="msgBtn">Senda skilaboð 💌</button>
-        <button id="selfieBtn">Senda selfie 📸</button>
-        <button id="chickenBtn">Nei ég þori ekki 🙈</button>
+        <h1>😏 Flott hjá þér!</h1>
+        <p style="font-size:15px; color:#555;">Messenger opnaðist í nýjum flipa</p>
     `;
+});
 
 document.getElementById("msgBtn").addEventListener("click", () => {
 window.open(`https://m.me/${GUNNI_MESSENGER_ID}`, "_blank");
