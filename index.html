@@ -347,14 +347,12 @@ function sendToGunni() {
     `;
 
 document.getElementById("msgBtn").addEventListener("click", () => {
+window.open(`https://m.me/${GUNNI_MESSENGER_ID}`, "_blank");
+ 
 document.getElementById("card").innerHTML = `
 <h1>😏 Flott hjá þér!</h1>
-<p style="font-size:15px; color:#555;">Opna Messenger...</p>
+<p style="font-size:15px; color:#555;">Messenger opnaðist í nýjum flipa</p>
 `;
- 
-setTimeout(() => {
-window.location.href = "https://m.me/gunnarfg";
-}, 500);
 });
 
     document.getElementById("selfieBtn").addEventListener("click", () => {
